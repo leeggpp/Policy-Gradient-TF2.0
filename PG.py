@@ -2,25 +2,27 @@ import tensorflow as tf
 import numpy as np
 import gym
 
+tf.keras.backend.set_floatx('float64')
 
 env = gym.make('CartPole-v1')
 InputSize = 4
 OutputSize = 2
 
 model = tf.keras.Sequential()
-model.add(tf.keras.layers.Dense(64, input_shape=(4,) , activation='relu'))
-model.add(tf.keras.layers.Dense(2, activation = 'softmax'))
+model.add(tf.keras.layers.Dense(100, input_shape=(InputSize,) , activation='relu', kernel_initializer='glorot_uniform'))
+model.add(tf.keras.layers.Dropout(0.05))
+model.add(tf.keras.layers.Dense(OutputSize, activation = 'softmax', kernel_initializer='glorot_uniform'))
 model.compile(optimizer=tf.keras.optimizers.Adam(0.01), loss=tf.keras.losses.categorical_crossentropy)
 
-
 def discount_rewards(r, gamma = 0.8):
-	discounted_r = np.zeros_like(r)
-	running_add = 0
-	for t in reversed(range(0, r.size)):
-		running_add = running_add * gamma + r[t]
-		discounted_r[t] = running_add
-	return discounted_r
-	
+    discounted_r = np.zeros_like(r)
+    running_add = 0
+    for t in reversed(range(0, r.size)):
+        running_add = running_add * gamma + r[t]
+        discounted_r[t] = running_add
+    return discounted_r
+
+scores = []
 for ep in range(100000):
 	s = env.reset()
 	state = []
@@ -34,24 +36,67 @@ for ep in range(100000):
 		a = model(s)
 		a_ = np.random.choice(2, p = a.numpy()[0])
 		s_, r, done, _ = env.step(a_)
+		score += r
+		r = r if not done or score == 500 else -10
 		state.append(s)
 		reward.append(r)
 		action.append(a)
 		action_.append(a_)
-		score += r
 		s = s_
-		
-	r_ = discount_rewards(np.array(reward))
-	r_ -= np.mean(r_)
-	r_ /= np.std(r_)
-	x = np.zeros((len(state), InputSize))
-	y =  np.zeros((len(action_), OutputSize))
-	for i in range(len(state)):
-		x[i] = state[i]
-		y[i][action_[i]] = r_[i]
-	if ep%100 == 0:
-		print (score)	
-	model.fit(x=x, y=y, verbose=0)
 	
-  
-  https://sergioskar.github.io/Policy-Gradients/
+	r_ = discount_rewards(np.array(reward))
+	# r_ -= np.mean(r_)
+	# r_ /= np.std(r_)
+	# r_ = np.array(reward)
+	x = np.array(state).reshape(len(state), InputSize)
+	y = np.zeros((len(action_), OutputSize))
+	r_ = r_.reshape(len(r_), 1)
+	y[np.arange(len(action_)), action_] = 1
+	# y = y * r_
+	r_ = r_.reshape(len(r_))
+	model.fit(x = x, y = y, sample_weight = r_, verbose = 0)
+	scores.append(score)
+	if ep % 50 == 0:
+		print (np.mean(np.array(scores[-50:])))
+	if np.mean(np.array(scores[-50:])) >= 490:
+		model.save('C:/Users/paklo/OneDrive/Desktop/Python/Savemodel/CartPole-v0-pg2.h5')
+		break
+	
+	
+	
+-------------------------
+
+import tensorflow as tf
+import numpy as np
+import gym
+
+tf.keras.backend.set_floatx('float64')
+
+env = gym.make('CartPole-v1')
+
+model = tf.keras.models.load_model('C:/Users/paklo/OneDrive/Desktop/Python/Savemodel/CartPole-v0-pg.h5')
+
+
+for i in range(5):
+	score = 0
+	s = env.reset()
+	done = False
+	while not done:
+		env.render()
+		s = s.reshape([1, 4])
+		a = model(s)
+		a_ = np.random.choice(2, p = a.numpy()[0])
+		s_, r, done, _ = env.step(a_)
+		s = s_
+		score += r
+	env.close()	
+	print (score)
+	
+	
+	
+	
+	
+	
+
+
+	
