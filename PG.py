@@ -59,13 +59,13 @@ for ep in range(100000):
 	if ep % 50 == 0:
 		print (np.mean(np.array(scores[-50:])))
 	if np.mean(np.array(scores[-50:])) >= 490:
-		model.save('C:/Users/paklo/OneDrive/Desktop/Python/Savemodel/CartPole-v0-pg2.h5')
+		model.save('C:/Users/paklo/OneDrive/Desktop/Python/Savemodel/CartPole-v0-pg.h5')
 		break
 	
 	
 	
--------------------------
 
+******************************************
 import tensorflow as tf
 import numpy as np
 import gym
