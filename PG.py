@@ -14,11 +14,11 @@ model.add(tf.keras.layers.Dropout(0.05))
 model.add(tf.keras.layers.Dense(OutputSize, activation = 'softmax', kernel_initializer='glorot_uniform'))
 model.compile(optimizer=tf.keras.optimizers.Adam(0.01), loss=tf.keras.losses.categorical_crossentropy)
 
-def discount_rewards(r, gamma = 0.8):
+def discount_rewards(r, gamma = 0.9):
     discounted_r = np.zeros_like(r)
     running_add = 0
-    for t in reversed(range(0, r.size)):
-        running_add = running_add * gamma + r[t]
+    for t in reversed(range(len(r))):
+        running_add = (running_add * gamma) + r[t]
         discounted_r[t] = running_add
     return discounted_r
 
