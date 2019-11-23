@@ -5,6 +5,9 @@ import gym
 tf.keras.backend.set_floatx('float64')
 
 env = gym.make('CartPole-v1')
+
+print(env.action_space) #Discrete(2)
+print(env.observation_space) #Box(4,)
 InputSize = 4
 OutputSize = 2
 
